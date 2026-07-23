@@ -4,6 +4,7 @@ import com.epicmonstrosity.brewference.generation.TokenConsumer;
 import com.epicmonstrosity.brewference.gguf.Config;
 import com.epicmonstrosity.brewference.gguf.GgufCheckpointLoader;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
+import com.epicmonstrosity.brewference.tokenizer.decoder.ByteLevelTokenDecoder;
 import com.epicmonstrosity.brewference.tokenizer.vocab.VocabLoader;
 import com.epicmonstrosity.brewference.tokenizer.vocab.Vocabulary;
 import com.epicmonstrosity.brewference.transformer.RunState;
@@ -19,7 +20,7 @@ public class Qwen2ModelRunner extends ModelRunner {
         super(
                 checkpointLoader,
                 new Qwen2PromptEncoder(),
-                new Qwen2TokenDecoder(new Qwen2PromptEncoder().buildByteToUnicode()),
+                new ByteLevelTokenDecoder(new Qwen2PromptEncoder().buildByteToUnicode()),
                 debugConsumer
         );
     }

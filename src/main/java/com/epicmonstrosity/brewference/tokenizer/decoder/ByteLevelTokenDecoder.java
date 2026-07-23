@@ -1,15 +1,13 @@
-package com.epicmonstrosity.brewference.model.qwen2;
-
-import com.epicmonstrosity.brewference.tokenizer.decoder.TokenDecoder;
+package com.epicmonstrosity.brewference.tokenizer.decoder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Qwen2TokenDecoder implements TokenDecoder {
+public class ByteLevelTokenDecoder implements TokenDecoder {
     private final Map<Character, Byte> unicodeToByte;
 
-    public Qwen2TokenDecoder(final char[] byteToUnicode) {
+    public ByteLevelTokenDecoder(final char[] byteToUnicode) {
         this.unicodeToByte = new HashMap<>(256);
         for (int byteIndex = 0; byteIndex < 256; byteIndex++) {
             unicodeToByte.put(byteToUnicode[byteIndex], (byte) byteIndex);

@@ -51,17 +51,4 @@ public class NonInterleavedRope {
             }
         }
     }
-
-//    private static int getKeyValueDim(final Config config) {
-//        return (config.getTransformerDimensions() * config.getNumKVHeads()) / config.getNumHeads();
-//    }
-
-//    private static float getRopeBase() {
-//        return 1_000_000.0f;
-//    }
-
-    // Gemma 3 uses rope_theta = 1,000,000 for global layers and 10,000 for local layers.
-//    public static float getRopeBase(final LayerContext layerContext) {
-//        return Gemma2AttentionPattern.isGlobalLayer(layerContext) ? 1_000_000.0f : 10_000.0f;
-//    }
 }

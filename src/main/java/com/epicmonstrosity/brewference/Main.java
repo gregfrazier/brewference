@@ -27,29 +27,6 @@ public class Main implements Callable<Integer> {
     public static void main(final String[] args) throws IOException {
         final int exitCode = new CommandLine(new Main()).execute(args);
         System.exit(exitCode);
-//        if (args.length < 1) {
-//            System.out.println("Usage: java -jar brewference.jar <model.gguf> [templateId] [systemPrompt]");
-//            System.out.println("  templateId: one of qwen2, smollm, phi3, gemma, llama2 (default: llama2)");
-//            return;
-//        }
-//
-//        final String modelPath = args[0];
-//        final String templateId = args.length > 1 ? args[1] : "qwen2";
-//        final String systemPrompt = args.length > 2 ? args[2] : "You are a helpful assistant.";
-
-//        final PromptTemplateRegistry promptRegistry = new PromptTemplateRegistry();
-//        final PromptTemplate promptTemplate = promptRegistry.get(templateId);
-//
-//        final GenerationOptions options = new GenerationOptions().setMaxNewTokens(4096);
-//
-//        // ChatTui is the TokenConsumer: generation streams decoded tokens back through it, and it
-//        // also receives model-load debug output during createModelRunner(...).
-//        final ChatTui chat = new ChatTui(promptTemplate, options, systemPrompt);
-//
-//        final ModelRunner modelRunner = ModelRunnerFactory.createModelRunner(modelPath, chat);
-//        chat.setSession(modelRunner.createSession());
-//
-//        chat.run();
     }
 
     @Override

@@ -56,7 +56,7 @@ At the moment Brewference is intentionally minimal.
 - CPU inference only
 - Q8_0 GGUF support
 
-The project is in a state of flux and will feature breaking changes at regular intervals.
+The project is in a state of flux, the api, package structure, etc. are not stable.
 
 ---
 
@@ -95,6 +95,8 @@ java -jar .\brewference-1.0-SNAPSHOT.jar --model="gemma-3-1b-it-Q8_0.gguf" --tem
 **Notes**
 
 - Memory usage is quite high. 10-12GB of RAM is common for a 2B model.
+- The Gemma models will sometimes never send an EOS token and continue to talk to themselves until they run out of context. Those models also sometimes ignore your current inquiry and continue to talk about a previous topic. Could be my implementation.
+- The token decoders for a lot of these models are simplistic and will leave system tokens in the output.
 
 ---
 

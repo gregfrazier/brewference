@@ -19,11 +19,6 @@ public class LayerContext {
         return layerNum;
     }
 
-    /**
-     * KV cache layer offset
-     * <p>
-     * [layer][position][kv_dim]
-     */
     public int getLayerOffset() {
         return layerOffset;
     }

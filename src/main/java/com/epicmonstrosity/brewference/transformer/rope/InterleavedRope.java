@@ -45,19 +45,4 @@ public class InterleavedRope {
             }
         }
     }
-
-//    private static void rotateVector(final float[] vectors, final int headIndex, final float cosAngle, final float sinAngle) {
-//        final float firstValue = vectors[headIndex];
-//        final float secondValue = vectors[headIndex + 1];
-//        vectors[headIndex] = firstValue * cosAngle - secondValue * sinAngle;
-//        vectors[headIndex + 1] = firstValue * sinAngle + secondValue * cosAngle;
-//    }
-//
-//    private static int getKeyValueDim(final Config config) {
-//        return (config.getTransformerDimensions() * config.getNumKVHeads()) / config.getNumHeads();
-//    }
-//
-//    private static float getRopeBase() {
-//        return 10_000.0f;
-//    }
 }

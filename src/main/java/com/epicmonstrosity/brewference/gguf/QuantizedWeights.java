@@ -83,36 +83,4 @@ public class QuantizedWeights {
             }
         }
     }
-    
-    /**
-     * Computes the dot product between a quantized data block and a floating-point array.
-     * The method processes the quantized data in blocks of 32 elements, applying block-specific
-     * scaling factors to compute the final result.
-     *
-     * @param q The Q8Block containing the quantized data and corresponding scaling factors.
-     *          Each block in the Q8Block corresponds to 32 elements.
-     * @param qOffset The starting offset within the quantized data array of the Q8Block.
-     *                This determines the initial position for reading quantized values.
-     * @param x The floating-point array with which to compute the dot product.
-     *          It must have enough elements starting from the specified offset.
-     * @param xOffset The starting offset within the floating-point array.
-     *                This determines the initial position for reading floating-point values.
-     * @param n The number of elements to process for the dot product.
-     *          This value must be a multiple of 32 to align with the block structure.
-     * @return The computed dot product value as a floating-point number.
-     */
-    public float dot(final Q8Block q, final int qOffset, final float[] x, final int xOffset, final int n) {
-        float sum = 0.0f;
-        final int numBlocks = n / 32;
-        final int blockIdx = qOffset / 32;
-        for (int b = 0; b < numBlocks; b++) {
-            final float scale = q.scales[blockIdx + b];
-            float blockSum = 0.0f;
-            for (int i = 0; i < 32; i++) {
-                blockSum += q.data[qOffset + b * 32 + i] * x[xOffset + b * 32 + i];
-            }
-            sum += blockSum * scale;
-        }
-        return sum;
-    }
 }
