@@ -5,9 +5,7 @@ import com.epicmonstrosity.brewference.gguf.Config;
 import com.epicmonstrosity.brewference.gguf.GgufCheckpointLoader;
 import com.epicmonstrosity.brewference.model.llama2.Llama2AttentionPattern;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
-import com.epicmonstrosity.brewference.tokenizer.decoder.ByteLevelTokenDecoder;
-import com.epicmonstrosity.brewference.tokenizer.vocab.VocabLoader;
-import com.epicmonstrosity.brewference.tokenizer.vocab.Vocabulary;
+import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
 import com.epicmonstrosity.brewference.transformer.RunState;
 import com.epicmonstrosity.brewference.transformer.RunStateAllocator;
 import com.epicmonstrosity.brewference.transformer.TransformerGraph;
@@ -18,18 +16,13 @@ import java.util.List;
 public class SmolLM3ModelRunner extends ModelRunner {
 
     public SmolLM3ModelRunner(final GgufCheckpointLoader checkpointLoader,
-                             final TokenConsumer debugConsumer) throws IOException {
+                              final PromptEncoderRegistry.TokenCodec tokenCodec,
+                              final TokenConsumer debugConsumer) throws IOException {
         super(
                 checkpointLoader,
-                new SmolLM3PromptEncoder(),
-                new ByteLevelTokenDecoder(new SmolLM3PromptEncoder().buildByteToUnicode()),
+                tokenCodec,
                 debugConsumer
         );
-    }
-
-    @Override
-    protected Vocabulary loadVocabulary(final Config config) {
-        return VocabLoader.loadVocabWithMerges(config);
     }
 
     @Override

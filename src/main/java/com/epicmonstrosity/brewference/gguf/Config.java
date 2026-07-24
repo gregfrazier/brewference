@@ -346,4 +346,8 @@ public class Config {
         this.filename = filename;
         return this;
     }
+
+    public String getCodecId() {
+        return String.format("%s-%s", tokenizerPreTokenizer, tokenizerModelType);
+    }
 }

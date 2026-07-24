@@ -4,6 +4,7 @@ import com.epicmonstrosity.brewference.generation.TokenConsumer;
 import com.epicmonstrosity.brewference.gguf.Config;
 import com.epicmonstrosity.brewference.gguf.GgufCheckpointLoader;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
+import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
 import com.epicmonstrosity.brewference.tokenizer.vocab.VocabLoader;
 import com.epicmonstrosity.brewference.tokenizer.vocab.Vocabulary;
 import com.epicmonstrosity.brewference.transformer.RunState;
@@ -16,18 +17,13 @@ import java.util.List;
 public class Phi3ModelRunner extends ModelRunner {
 
     public Phi3ModelRunner(final GgufCheckpointLoader checkpointLoader,
+                           final PromptEncoderRegistry.TokenCodec tokenCodec,
                            final TokenConsumer debugConsumer) throws IOException {
         super(
                 checkpointLoader,
-                new Phi3PromptEncoder(),
-                null,
+                tokenCodec,
                 debugConsumer
         );
-    }
-
-    @Override
-    protected Vocabulary loadVocabulary(final Config config) {
-        return VocabLoader.loadVocab(config);
     }
 
     @Override

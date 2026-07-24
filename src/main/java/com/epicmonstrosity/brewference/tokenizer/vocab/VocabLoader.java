@@ -1,6 +1,7 @@
 package com.epicmonstrosity.brewference.tokenizer.vocab;
 
 import com.epicmonstrosity.brewference.gguf.Config;
+import com.epicmonstrosity.brewference.tui.ChatTui;
 
 import java.util.*;
 
@@ -14,6 +15,11 @@ public class VocabLoader {
     private static final Set<Integer> SPECIAL_TOKEN_TYPES = Collections.unmodifiableSet(
             new HashSet<>(Arrays.asList(2, 3))
     );
+
+    @FunctionalInterface
+    public interface VocabularySupplier {
+        Vocabulary loadVocab(final Config config);
+    }
 
     @SuppressWarnings("unchecked")
     public static Vocabulary loadVocab(final Config config) {

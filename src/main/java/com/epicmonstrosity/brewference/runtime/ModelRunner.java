@@ -10,6 +10,8 @@ import com.epicmonstrosity.brewference.gguf.QuantizedWeights;
 import com.epicmonstrosity.brewference.tokenizer.decoder.StreamingUnicodeDecoder;
 import com.epicmonstrosity.brewference.tokenizer.decoder.TokenDecoder;
 import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoder;
+import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
+import com.epicmonstrosity.brewference.tokenizer.vocab.VocabLoader;
 import com.epicmonstrosity.brewference.tokenizer.vocab.Vocabulary;
 import com.epicmonstrosity.brewference.transformer.RunState;
 import com.epicmonstrosity.brewference.transformer.TransformerGraph;
@@ -25,14 +27,15 @@ public abstract class ModelRunner {
     protected final TransformerGraph transformer;
     protected final PromptEncoder encoder;
     protected final TokenDecoder decoder;
+    protected final VocabLoader.VocabularySupplier vocabSupplier;
     protected final TokenConsumer debugConsumer;
 
     protected ModelRunner(final GgufCheckpointLoader checkpointLoader,
-                          final PromptEncoder encoder,
-                          final TokenDecoder decoder,
+                          final PromptEncoderRegistry.TokenCodec codec,
                           final TokenConsumer debugConsumer) throws IOException {
-        this.encoder = encoder;
-        this.decoder = decoder;
+        this.encoder = codec.getEncoder();
+        this.decoder = codec.getDecoder();
+        this.vocabSupplier = codec.getVocabSupplier();
         this.debugConsumer = debugConsumer;
 
         debugConsumer.onDebug("Loading weights...");
@@ -46,7 +49,9 @@ public abstract class ModelRunner {
         this.transformer = createTransformer(config);
     }
 
-    protected abstract Vocabulary loadVocabulary(Config config) throws IOException;
+    protected Vocabulary loadVocabulary(final Config config) throws IOException {
+        return this.vocabSupplier.loadVocab(config);
+    }
 
     protected abstract TransformerGraph createTransformer(Config config);
 
@@ -100,6 +105,11 @@ public abstract class ModelRunner {
 
         private GenericModelSession() {
             reset();
+        }
+
+        @Override
+        public Config getConfig() {
+            return config;
         }
 
         @Override

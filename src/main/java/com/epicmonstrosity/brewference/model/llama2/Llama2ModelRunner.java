@@ -6,6 +6,7 @@ import com.epicmonstrosity.brewference.gguf.GgufCheckpointLoader;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
 import com.epicmonstrosity.brewference.tokenizer.decoder.TokenDecoder;
 import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoder;
+import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
 import com.epicmonstrosity.brewference.tokenizer.vocab.VocabLoader;
 import com.epicmonstrosity.brewference.tokenizer.vocab.Vocabulary;
 import com.epicmonstrosity.brewference.transformer.RunState;
@@ -17,15 +18,9 @@ import java.util.List;
 
 public class Llama2ModelRunner extends ModelRunner {
     public Llama2ModelRunner(final GgufCheckpointLoader checkpointLoader,
-                             final PromptEncoder encoder,
-                             final TokenDecoder decoder,
+                             final PromptEncoderRegistry.TokenCodec tokenCodec,
                              final TokenConsumer debugConsumer) throws IOException {
-        super(checkpointLoader, encoder, decoder, debugConsumer);
-    }
-
-    @Override
-    protected Vocabulary loadVocabulary(final Config config) {
-        return VocabLoader.loadVocab(config);
+        super(checkpointLoader, tokenCodec, debugConsumer);
     }
 
     @Override

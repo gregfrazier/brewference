@@ -16,26 +16,25 @@ public class InterleavedRope {
                 ? config.getRopeFrequencyScale()
                 : 1.0f);
 
-        applyToHeads(runState.q, config.getNumHeads(), headSize, headSize, position, ropeFrequencyBase);
-        applyToHeads(runState.k, config.getNumKVHeads(), headSize, headSize, position, ropeFrequencyBase);
+        final RopeCache.Result result = RopeCache.precomputeAngles(headSize, ropeFrequencyBase, position);
+
+        applyToHeads(runState.q, config.getNumHeads(), headSize, result.cosines, result.sines);
+        applyToHeads(runState.k, config.getNumKVHeads(), headSize, result.cosines, result.sines);
     }
 
     private static void applyToHeads(final float[] vector,
                                      final int headCount,
                                      final int headSize,
-                                     final int rotaryDimensionCount,
-                                     final float position,
-                                     final float frequencyBase) {
+                                     final float[] cosines,
+                                     final float[] sines) {
         for (int head = 0; head < headCount; head++) {
             final int headOffset = head * headSize;
 
-            for (int dimension = 0; dimension < rotaryDimensionCount; dimension += 2) {
-                final float inverseFrequency = (float) (1.0 / Math.pow(frequencyBase, dimension / (float) rotaryDimensionCount));
-                final float angle = position * inverseFrequency;
-                final float cosine = (float) Math.cos(angle);
-                final float sine = (float) Math.sin(angle);
+            for (int dimension = 0; dimension < cosines.length; dimension++) {
+                final float cosine = cosines[dimension];
+                final float sine = sines[dimension];
 
-                final int firstIndex = headOffset + dimension;
+                final int firstIndex = headOffset + 2 * dimension;
                 final int secondIndex = firstIndex + 1;
                 final float first = vector[firstIndex];
                 final float second = vector[secondIndex];

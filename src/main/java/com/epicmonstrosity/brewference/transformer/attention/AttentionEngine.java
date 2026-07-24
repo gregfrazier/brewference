@@ -4,15 +4,19 @@ import com.epicmonstrosity.brewference.gguf.Config;
 import com.epicmonstrosity.brewference.transformer.RunState;
 import com.epicmonstrosity.brewference.transformer.math.Kernels;
 
+import java.util.Arrays;
+
 public class AttentionEngine {
     private final AttentionPattern attentionPattern;
     private final float sqrtHeadSize;
+    private final float inverseScale;
     private final int keyValueDim;
     private final int keyValueMul;
 
     public AttentionEngine(final AttentionPattern attentionPattern, final Config config) {
         this.attentionPattern = attentionPattern;
         this.sqrtHeadSize = attentionPattern.getAttentionScaling(config); //(float) Math.sqrt(config.getHeadSize());
+        this.inverseScale = 1.0f / this.sqrtHeadSize;
         this.keyValueDim = config.getNumKVHeads() * config.getHeadSize();
         this.keyValueMul = config.getNumHeads() / config.getNumKVHeads();
     }
@@ -60,15 +64,19 @@ public class AttentionEngine {
                                         final int queryOffset, final int attentionOffset,
                                         final int keyValueHeadOffset, final int headSize,
                                         final int startPosition, final int tokenPosition) {
+        final float[] q = runState.q;
+        final float[] keyCache = runState.key_cache;
+        final float[] att = runState.att;
+
         for (int position = startPosition; position <= tokenPosition; position++) {
             final int keyCacheOffset = layerContext.getLayerOffset() + position * keyValueDim + keyValueHeadOffset;
             float score = 0.0f;
 
             for (int headIndex = 0; headIndex < headSize; headIndex++) {
-                score += runState.q[queryOffset + headIndex] * runState.key_cache[keyCacheOffset + headIndex];
+                score += q[queryOffset + headIndex] * keyCache[keyCacheOffset + headIndex];
             }
 
-            runState.att[attentionOffset + position] = score / sqrtHeadSize;
+            att[attentionOffset + position] = score * inverseScale;
         }
     }
 
@@ -77,17 +85,31 @@ public class AttentionEngine {
                                         final int keyValueHeadOffset, final int headSize,
                                         final int startPosition, final int tokenPosition) {
         final int valueCacheOffset = layerContext.getLayerOffset() + keyValueHeadOffset;
+        final float[] att = runState.att;
+        final float[] valueCache = runState.value_cache;
+        final float[] xb = runState.xb;
 
-        for (int headIndex = 0; headIndex < headSize; headIndex++) {
-            float weightedValue = 0.0f;
+        Arrays.fill(xb, queryOffset, queryOffset + headSize, 0.0f);
 
-            for (int position = startPosition; position <= tokenPosition; position++) {
-                final int valueOffset = valueCacheOffset + position * keyValueDim + headIndex;
-                weightedValue += runState.att[attentionOffset + position] * runState.value_cache[valueOffset];
+        for (int position = startPosition; position <= tokenPosition; position++) {
+            final float attentionWeight = att[attentionOffset + position];
+            final int valueBase = valueCacheOffset + position * keyValueDim;
+
+            for (int headIndex = 0; headIndex < headSize; headIndex++) {
+                xb[queryOffset + headIndex] += attentionWeight * valueCache[valueBase + headIndex];
             }
-
-            runState.xb[queryOffset + headIndex] = weightedValue;
         }
+
+//        for (int headIndex = 0; headIndex < headSize; headIndex++) {
+//            float weightedValue = 0.0f;
+//
+//            for (int position = startPosition; position <= tokenPosition; position++) {
+//                final int valueOffset = valueCacheOffset + position * keyValueDim + headIndex;
+//                weightedValue += att[attentionOffset + position] * valueCache[valueOffset];
+//            }
+//
+//            xb[queryOffset + headIndex] = weightedValue;
+//        }
     }
 
     private int keyValueHeadOffset(final int headNum, final int headSize) {

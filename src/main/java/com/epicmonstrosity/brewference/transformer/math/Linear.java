@@ -43,11 +43,25 @@ public final class Linear {
         final int blocksPerRow = (inputSize + Q8_BLOCK_SIZE - 1) / Q8_BLOCK_SIZE;
         final int firstScaleBlock = weightsOffset / Q8_BLOCK_SIZE;
 
-        IntStream.range(0, outputSize).parallel().forEach(row ->
-                output[row] = computeRowDotProduct(input, weights, weightsOffset,
-                        inputSize, outputSize, blocksPerRow, firstScaleBlock, row
-                )
-        );
+        final int lastScaleIndex = firstScaleBlock + (outputSize - 1) * blocksPerRow + (blocksPerRow - 1);
+        if (lastScaleIndex >= weights.scales.length) {
+            throw new IllegalStateException(String.format(
+                    "matmul scale index out of bounds (wOffset=%d, n=%d, d=%d)", weightsOffset, inputSize, outputSize));
+        }
+
+        if (outputSize < 256) {
+            IntStream.range(0, outputSize).forEach(row ->
+                    output[row] = computeRowDotProduct(input, weights, weightsOffset,
+                            inputSize, outputSize, blocksPerRow, firstScaleBlock, row
+                    )
+            );
+        } else {
+            IntStream.range(0, outputSize).parallel().forEach(row ->
+                    output[row] = computeRowDotProduct(input, weights, weightsOffset,
+                            inputSize, outputSize, blocksPerRow, firstScaleBlock, row
+                    )
+            );
+        }
     }
 
     private static void validateMatmulArguments(final float[] output, final float[] input, final QuantizedWeights.Q8Block weights) {
@@ -62,40 +76,44 @@ public final class Linear {
     private static float computeRowDotProduct(final float[] input, final QuantizedWeights.Q8Block weights,
                                               final int weightsOffset, final int inputSize, final int outputSize,
                                               final int blocksPerRow, final int firstScaleBlock, final int row) {
+        final byte[] data = weights.data;
+        final float[] scales = weights.scales;
         float rowSum = 0.0f;
         final int rowScaleBase = firstScaleBlock + row * blocksPerRow;
         final int rowDataBase = weightsOffset + row * inputSize;
 
         for (int block = 0; block < blocksPerRow; block++) {
-            final int scaleIndex = rowScaleBase + block;
-            validateScaleIndex(scaleIndex, row, block, weightsOffset, inputSize, outputSize, weights.scales.length);
-
             final int blockInputOffset = block * Q8_BLOCK_SIZE;
             final int blockSize = Math.min(Q8_BLOCK_SIZE, inputSize - blockInputOffset);
             final int dataIndex = rowDataBase + blockInputOffset;
 
-            rowSum += computeScaledBlockSum(input, weights, scaleIndex, dataIndex, blockInputOffset, blockSize);
+            float blockSum = 0.0f;
+            for (int offset = 0; offset < blockSize; offset++) {
+                blockSum += data[dataIndex + offset] * input[blockInputOffset + offset];
+            }
+
+            rowSum += blockSum * scales[rowScaleBase + block];
         }
 
         return rowSum;
     }
 
-    private static void validateScaleIndex(final int scaleIndex, final int row, final int block,
-                                           final int weightsOffset, final int inputSize,
-                                           final int outputSize, final int scaleCount) {
-        if (scaleIndex >= scaleCount) {
-            throw new IllegalStateException(String.format("matmul scale index out of bounds: row=%d block=%d (wOffset=%d, n=%d, d=%d)", row, block, weightsOffset, inputSize, outputSize));
-        }
-    }
-
-    private static float computeScaledBlockSum(final float[] input, final QuantizedWeights.Q8Block weights,
-                                               final int scaleIndex, final int dataIndex, final int inputIndex, final int blockSize) {
-        float blockSum = 0.0f;
-
-        for (int offset = 0; offset < blockSize; offset++) {
-            blockSum += weights.data[dataIndex + offset] * input[inputIndex + offset];
-        }
-
-        return blockSum * weights.scales[scaleIndex];
-    }
+//    private static void validateScaleIndex(final int scaleIndex, final int row, final int block,
+//                                           final int weightsOffset, final int inputSize,
+//                                           final int outputSize, final int scaleCount) {
+//        if (scaleIndex >= scaleCount) {
+//            throw new IllegalStateException(String.format("matmul scale index out of bounds: row=%d block=%d (wOffset=%d, n=%d, d=%d)", row, block, weightsOffset, inputSize, outputSize));
+//        }
+//    }
+//
+//    private static float computeScaledBlockSum(final float[] input, final QuantizedWeights.Q8Block weights,
+//                                               final int scaleIndex, final int dataIndex, final int inputIndex, final int blockSize) {
+//        float blockSum = 0.0f;
+//
+//        for (int offset = 0; offset < blockSize; offset++) {
+//            blockSum += weights.data[dataIndex + offset] * input[inputIndex + offset];
+//        }
+//
+//        return blockSum * weights.scales[scaleIndex];
+//    }
 }

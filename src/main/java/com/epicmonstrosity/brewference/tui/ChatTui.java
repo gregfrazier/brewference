@@ -52,6 +52,8 @@ public final class ChatTui implements TokenConsumer {
         register("exit", "Quit the chat", (args, chat) -> chat.stop());
         register("clear", "Reset the conversation", (args, chat) -> chat.clearContext());
         register("help", "List available commands", (args, chat) -> chat.printHelp());
+        register("details", "Print model details", (args, chat) -> chat.printModelDetails());
+        register("metadata", "Print model metadata", (args, chat) -> chat.printModelMetadata());
     }
 
     private void register(final String name, final String description, final ChatCommand handler) {
@@ -151,6 +153,16 @@ public final class ChatTui implements TokenConsumer {
         }
     }
 
+    public void printModelDetails() {
+        System.out.println("Model details:");
+        System.out.println(session.getConfig().toString());
+    }
+
+    public void printModelMetadata() {
+        System.out.println("Model metadata:");
+        System.out.println(session.getConfig().getMetadata().toString());
+    }
+
     private ChatConversation newConversation() {
         final ChatConversation fresh = new ChatConversation();
         if (systemPrompt != null && !systemPrompt.isEmpty()) {
@@ -169,6 +181,10 @@ public final class ChatTui implements TokenConsumer {
 
     @Override
     public void onPrefillToken(final int position, final int tokenId, final String tokenText) {
+        if (options.isEchoPrompt()) {
+            System.out.printf("tokenId: %d tokenText: %s%n", tokenId, tokenText);
+            System.out.flush();
+        }
     }
 
     @Override

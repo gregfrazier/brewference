@@ -11,9 +11,10 @@ public class NonInterleavedRope {
         final int headSize = config.getHeadSize();
         final float ropeFrequencyBase = getEffectiveConfig(config.getRopeFrequencyBase(), frequencySupplier.get());
         final float position = calculatePosition(config, layerContext);
+        final RopeCache.Result result = RopeCache.precomputeAngles(headSize, ropeFrequencyBase, position);
 
-        applyToHeads(runState.q, config.getNumHeads(), headSize, headSize, position, ropeFrequencyBase);
-        applyToHeads(runState.k, config.getNumKVHeads(), headSize, headSize, position, ropeFrequencyBase);
+        applyToHeads(runState.q, config.getNumHeads(), headSize, result.cosines, result.sines);
+        applyToHeads(runState.k, config.getNumKVHeads(), headSize, result.cosines, result.sines);
     }
 
     private static float getEffectiveConfig(final float config, final Float frequencySupplier) {
@@ -27,19 +28,15 @@ public class NonInterleavedRope {
     private static void applyToHeads(final float[] vector,
                                      final int headCount,
                                      final int headSize,
-                                     final int rotaryDimensionCount,
-                                     final float position,
-                                     final float frequencyBase) {
-        final int half = headSize / 2;
+                                     final float[] cosines,
+                                     final float[] sines) {
+        final int half = cosines.length;
         for (int head = 0; head < headCount; head++) {
             final int headOffset = head * headSize;
 
             for (int dimension = 0; dimension < half; dimension++) {
-                // This could be optimized by precomputing the inverse frequency
-                final float inverseFrequency = (float) (1.0 / Math.pow(frequencyBase, (2.0f * dimension) / (float) rotaryDimensionCount));
-                final float angle = position * inverseFrequency;
-                final float cosine = (float) Math.cos(angle);
-                final float sine = (float) Math.sin(angle);
+                final float cosine = cosines[dimension];
+                final float sine = sines[dimension];
 
                 final int firstIndex = headOffset + dimension;
                 final int secondIndex = firstIndex + half;

@@ -1,13 +1,12 @@
 package com.epicmonstrosity.brewference.generation;
 
 import java.util.PriorityQueue;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Sampler {
-    private final Random rng;
 
     public Sampler(final long seed) {
-        this.rng = new Random(seed);
+
     }
 
     /**
@@ -110,7 +109,7 @@ public class Sampler {
             retainedProbabilitySum += probabilities[index];
         }
 
-        final float selectionThreshold = rng.nextFloat() * retainedProbabilitySum;
+        final float selectionThreshold = ThreadLocalRandom.current().nextFloat() * retainedProbabilitySum;
         float cumulativeProbability = 0.0f;
 
         for (int index = 0; index < retainedCandidateCount; index++) {

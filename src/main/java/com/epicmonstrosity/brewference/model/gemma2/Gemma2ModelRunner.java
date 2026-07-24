@@ -5,6 +5,7 @@ import com.epicmonstrosity.brewference.gguf.Config;
 import com.epicmonstrosity.brewference.gguf.GgufCheckpointLoader;
 import com.epicmonstrosity.brewference.model.gemma3.GemmaPromptEncoder;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
+import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
 import com.epicmonstrosity.brewference.tokenizer.vocab.VocabLoader;
 import com.epicmonstrosity.brewference.tokenizer.vocab.Vocabulary;
 import com.epicmonstrosity.brewference.transformer.RunState;
@@ -16,18 +17,9 @@ import java.util.List;
 
 public class Gemma2ModelRunner extends ModelRunner {
     public Gemma2ModelRunner(final GgufCheckpointLoader checkpointLoader,
+                             final PromptEncoderRegistry.TokenCodec tokenCodec,
                              final TokenConsumer debugConsumer) throws IOException {
-        super(
-                checkpointLoader,
-                new GemmaPromptEncoder(),
-                null,
-                debugConsumer
-        );
-    }
-
-    @Override
-    protected Vocabulary loadVocabulary(final Config config) {
-        return VocabLoader.loadVocab(config);
+        super(checkpointLoader, tokenCodec, debugConsumer);
     }
 
     @Override

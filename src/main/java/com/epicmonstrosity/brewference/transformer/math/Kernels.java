@@ -1,9 +1,8 @@
 package com.epicmonstrosity.brewference.transformer.math;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class Kernels {
-    private static final Random random = new Random();
     private static final float ZERO = 0.0f;
     private static final float ONE = 1.0f;
 
@@ -118,13 +117,16 @@ public final class Kernels {
             sum += exponent;
         }
 
+        final float inverseSum = ONE / sum;
+
         for (int i = 0; i < size; i++) {
-            values[startPosition + i] /= sum;
+            //values[startPosition + i] /= sum;
+            values[startPosition + i] *= inverseSum;
         }
     }
 
     public static int sampleSimple(final float[] probabilities, final int size) {
-        final float randomValue = random.nextFloat();
+        final float randomValue = ThreadLocalRandom.current().nextFloat();
         float cumulativeProbability = ZERO;
 
         for (int i = 0; i < size; i++) {

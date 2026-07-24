@@ -5,6 +5,9 @@ import com.epicmonstrosity.brewference.gguf.Config;
 import com.epicmonstrosity.brewference.gguf.GgufCheckpointLoader;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
 import com.epicmonstrosity.brewference.tokenizer.decoder.ByteLevelTokenDecoder;
+import com.epicmonstrosity.brewference.tokenizer.decoder.TokenDecoder;
+import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoder;
+import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
 import com.epicmonstrosity.brewference.tokenizer.vocab.VocabLoader;
 import com.epicmonstrosity.brewference.tokenizer.vocab.Vocabulary;
 import com.epicmonstrosity.brewference.transformer.RunState;
@@ -16,18 +19,15 @@ import java.util.List;
 
 public class Qwen2ModelRunner extends ModelRunner {
     public Qwen2ModelRunner(final GgufCheckpointLoader checkpointLoader,
+                            final PromptEncoderRegistry.TokenCodec codec,
                             final TokenConsumer debugConsumer) throws IOException {
         super(
                 checkpointLoader,
-                new Qwen2PromptEncoder(),
-                new ByteLevelTokenDecoder(new Qwen2PromptEncoder().buildByteToUnicode()),
+                codec,
+                //new Qwen2PromptEncoder(),
+                //new ByteLevelTokenDecoder(new Qwen2PromptEncoder().buildByteToUnicode()),
                 debugConsumer
         );
-    }
-
-    @Override
-    protected Vocabulary loadVocabulary(final Config config) {
-        return VocabLoader.loadVocabWithMerges(config);
     }
 
     @Override
