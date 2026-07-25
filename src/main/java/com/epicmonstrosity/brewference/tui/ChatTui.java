@@ -54,6 +54,7 @@ public final class ChatTui implements TokenConsumer {
         register("help", "List available commands", (args, chat) -> chat.printHelp());
         register("details", "Print model details", (args, chat) -> chat.printModelDetails());
         register("metadata", "Print model metadata", (args, chat) -> chat.printModelMetadata());
+        register("tensors", "Print model tensors", (args, chat) -> chat.printModelTensors());
     }
 
     private void register(final String name, final String description, final ChatCommand handler) {
@@ -161,6 +162,11 @@ public final class ChatTui implements TokenConsumer {
     public void printModelMetadata() {
         System.out.println("Model metadata:");
         System.out.println(session.getConfig().getMetadata().toString());
+    }
+
+    public void printModelTensors() {
+        System.out.println("Model tensors:");
+        session.getConfig().getTensorNames().forEach(System.out::println);
     }
 
     private ChatConversation newConversation() {

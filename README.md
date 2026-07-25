@@ -98,6 +98,7 @@ Recursion is a powerful tool for solving problems that involve repeatedly applyi
 | SmolLM2 1.7B             | Quite fast (6 t/s)                                                                                                                             |
 | SmolLM2 135M             | Blazing fast (42 t/s)                                                                                                                          |
 | SmolLM3 3B               | Acceptable, quite capable has "thinking" (3 t/s)                                                                                               |
+| Qwen 3 (0.6B, 1.7B, 4B)  | Acceptable (6t/s for 1.7B, 2-3t/s for 4B) *has thinking*                                                                                       |
 | Qwen 2.x 3B              | Acceptable (2 t/s)                                                                                                                             |
 | Qwen 2.x Coder           | Acceptable                                                                                                                                     |
 | CodeQwen 1.5             | Acceptable                                                                                                                                     |
@@ -109,7 +110,6 @@ Recursion is a powerful tool for solving problems that involve repeatedly applyi
 - Ministral 3 3B
 - Mistral 7B
 - Phi3 mini 128k
-- Qwen 3 1.7B
 - Qwen 3.5 1.7B or smaller
 - LFM 2.5 1.2B
 - Q4_0 quantized model loading

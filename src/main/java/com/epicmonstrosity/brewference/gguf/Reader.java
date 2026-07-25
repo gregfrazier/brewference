@@ -212,5 +212,15 @@ public class Reader {
             this.type = type;
             this.offset = offset;
         }
+
+        @Override
+        public String toString() {
+            return "TensorInfo{" +
+                    "name='" + name + '\'' +
+                    ", type=" + type +
+                    ", offset=" + offset +
+                    ", dims=" + dims.length +
+                    '}';
+        }
     }
 }

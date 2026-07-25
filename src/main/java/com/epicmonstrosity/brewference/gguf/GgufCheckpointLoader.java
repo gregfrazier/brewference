@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // Currently only supports Q8_0 files
 // Needs to be refactored, it also tries to load only specific tensors
@@ -21,6 +22,7 @@ public abstract class GgufCheckpointLoader {
         this.ggufReader.read();
         this.config = parseConfig();
         this.config.setFilename(filename);
+        this.config.setTensorNames(ggufReader.getTensors().stream().map(Reader.TensorInfo::toString).collect(Collectors.toList()));
     }
 
     public void printTensorSummary() {

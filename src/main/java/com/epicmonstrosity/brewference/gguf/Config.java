@@ -1,5 +1,6 @@
 package com.epicmonstrosity.brewference.gguf;
 
+import java.util.List;
 import java.util.Map;
 
 public class Config {
@@ -37,6 +38,9 @@ public class Config {
     private int unknownToken;
     private int sepToken;
     private int paddingToken;
+
+    // Convenience
+    private List<String> tensorNames;
 
     private Map<String, Object> metadata;
 
@@ -269,7 +273,7 @@ public class Config {
                 ", vocabSize=" + vocabSize + "\n" +
                 ", maxSequenceLength=" + maxSequenceLength + "\n" +
                 ", slidingWindow=" + slidingWindow + "\n" +
-                ", headSize=" + headSize + "\n" +
+                ", headSize=" + getHeadSize() + "\n" +
                 ", layerNormRMSEpsilon=" + layerNormRMSEpsilon + "\n" +
                 ", contextLength=" + contextLength + "\n" +
                 ", addSepToken=" + addSepToken + "\n" +
@@ -349,5 +353,14 @@ public class Config {
 
     public String getCodecId() {
         return String.format("%s-%s", tokenizerPreTokenizer, tokenizerModelType);
+    }
+
+    public List<String> getTensorNames() {
+        return tensorNames;
+    }
+
+    public Config setTensorNames(List<String> tensorNames) {
+        this.tensorNames = tensorNames;
+        return this;
     }
 }

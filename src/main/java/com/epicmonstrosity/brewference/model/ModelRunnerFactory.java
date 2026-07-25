@@ -11,6 +11,8 @@ import com.epicmonstrosity.brewference.model.llama2.Llama2CheckpointLoader;
 import com.epicmonstrosity.brewference.model.llama2.Llama2ModelRunner;
 import com.epicmonstrosity.brewference.model.qwen2.Qwen2CheckpointLoader;
 import com.epicmonstrosity.brewference.model.qwen2.Qwen2ModelRunner;
+import com.epicmonstrosity.brewference.model.qwen3.Qwen3CheckpointLoader;
+import com.epicmonstrosity.brewference.model.qwen3.Qwen3ModelRunner;
 import com.epicmonstrosity.brewference.model.smollm3.SmolLM3ModelRunner;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
 import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
@@ -37,6 +39,8 @@ public class ModelRunnerFactory {
             // Not ready
             //case "phi3":
             //    return new Phi3ModelRunner(new Phi3CheckpointLoader(filename), debugConsumer);
+            case "qwen3":
+                return new Qwen3ModelRunner(new Qwen3CheckpointLoader(filename), tokenCodec, debugConsumer);
             case "qwen2":
                 return new Qwen2ModelRunner(new Qwen2CheckpointLoader(filename), tokenCodec, debugConsumer);
             default:

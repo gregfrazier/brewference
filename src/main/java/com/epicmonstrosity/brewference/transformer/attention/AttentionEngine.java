@@ -99,17 +99,6 @@ public class AttentionEngine {
                 xb[queryOffset + headIndex] += attentionWeight * valueCache[valueBase + headIndex];
             }
         }
-
-//        for (int headIndex = 0; headIndex < headSize; headIndex++) {
-//            float weightedValue = 0.0f;
-//
-//            for (int position = startPosition; position <= tokenPosition; position++) {
-//                final int valueOffset = valueCacheOffset + position * keyValueDim + headIndex;
-//                weightedValue += att[attentionOffset + position] * valueCache[valueOffset];
-//            }
-//
-//            xb[queryOffset + headIndex] = weightedValue;
-//        }
     }
 
     private int keyValueHeadOffset(final int headNum, final int headSize) {
