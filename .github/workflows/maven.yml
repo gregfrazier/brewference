@@ -40,4 +40,6 @@ jobs:
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v2
       with:
-        files: target/*.jar
+        files: |
+          brewference-cli/target/*.jar
+          brewference-core/target/*.jar
