@@ -1,0 +1,9 @@
+TOOL {"name":"get_weather"}
+<bos>system
+You are helpful.
+<bos>user
+Hello
+<bos>model
+Hi there
+<bos>model
+

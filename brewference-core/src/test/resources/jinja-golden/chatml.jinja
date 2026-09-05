@@ -1,0 +1,8 @@
+{#- Licensed under the Apache License, Version 2.0 (the "License") #}
+{#- Edits made by Unsloth to make it work for most inference engines #}
+{# ───── defaults ───── #}
+{%- if tools -%}{% for tool in tools %}TOOL {{ tool | tojson }}
+{% endfor %}{% endif %}{% for message in messages %}{{ bos_token }}{{ message['role'] }}
+{{ message['content'] }}
+{% endfor %}{% if add_generation_prompt %}{{ bos_token }}model
+{% endif %}

@@ -1,0 +1,2 @@
+{% for item in items %}[{{ loop.index }}{% for other in items[0:2] %}<{{ other }}>{{ "!" if loop.last else "" }}{% endfor %}]
+{% endfor %}

@@ -1,0 +1,2 @@
+{% for item in items %}{{ loop.index }}:{{ loop.index0 }}:{{ item }}{% if loop.first %}(first){% endif %}{% if loop.last %}(last){% endif %}
+{% endfor %}

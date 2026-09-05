@@ -1,3 +1,7 @@
 /target/
 /.junie/
 /.idea/
+/tui-core/target/
+/brewference-core/target/
+/brewference-cli/target/
+/docs/
