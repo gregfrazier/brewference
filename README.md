@@ -109,13 +109,13 @@ If Jinja fails, try using the built-in templates:
 
 ## AI / LLM Usage
 
-The majority of this code is human-designed and written. The code within `brewference-core` is 98% human written (rough est) with the remaining percentage written by AI by use of refactoring, documentation, and unit testing.
+Most of `brewference-core` is human-designed and written (~98%). AI has primarily been used for refactoring, documentation, and unit tests.
 
-The code within `brewference-cli` is mostly AI written using Qwen3.8 27B and pi. Roles reversed in this case where it codes and I review and make changes. The code isn't great, but I'm impressed.
+`brewference-cli` is largely AI-written using Qwen3.8 27B and pi. In this case, the roles are reversed: AI does most of the coding while I review and modify the results. The code isn't great, but I'm impressed by what it can produce.
 
-`tui-core` is a mishmash, I wrote this code about a year ago for another project and used free credits with junie-cli to have AI extend it using a combination of GPT 5.6 Luna, Grok, and Gemini (basically I was testing capabilities of different models.) I'm honestly not a fan of what was done to the codebase; it needs a _lot_ of work.
+`tui-core` is a mix of my original code and AI-generated extensions. I used it to experiment with different models, but I'm not particularly happy with the resulting codebase, and it needs significant cleanup.
 
-This project is still a learning experience for myself, so I will never go full AI agent, but it is useful for working on tiresome tasks that would otherwise _kill this project_.
+Overall, Brewference is still a learning project for me. I don't intend to go fully agentic, but AI is extremely useful for handling tedious work that otherwise might cause me to abandon the project.
 
 _AI was used to generate the logo._
 
