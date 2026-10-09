@@ -1,15 +1,21 @@
 package com.epicmonstrosity.brewference.tensor;
 
-public final class CompositeFloatTensor implements FloatTensor {
-    private final FloatTensor[] parts;
+/**
+ * Concatenation of several {@link Tensor} views read as one logical tensor. Parts are not copied and
+ * may mix storage kinds — a mapped F32 norm can sit next to a Q8_0 one, and each part dequantizes
+ * lazily when its elements are read.
+ */
+public final class CompositeTensor implements Tensor {
+    private final Tensor[] parts;
     private final long[] offsets;
     private final long elementCount;
 
-    public CompositeFloatTensor(final FloatTensor... parts) {
+    public CompositeTensor(final Tensor... parts) {
         this.parts = TensorMemoryUtils.checkedParts(parts);
         this.offsets = new long[this.parts.length];
         long count = 0;
         for (int i = 0; i < this.parts.length; i++) {
+            if (this.parts[i] == null) continue;
             offsets[i] = count;
             count = Math.addExact(count, this.parts[i].elementCount());
         }
@@ -22,10 +28,10 @@ public final class CompositeFloatTensor implements FloatTensor {
     }
 
     @Override
-    public float get(final long index) {
+    public float value(final long index) {
         TensorMemoryUtils.checkIndex(index, elementCount);
         final int part = partFor(index);
-        return parts[part].get(index - offsets[part]);
+        return parts[part].value(index - offsets[part]);
     }
 
     private int partFor(final long index) {

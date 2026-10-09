@@ -17,7 +17,7 @@ public final class MappedF16Tensor implements FloatTensor {
     }
 
     @Override
-    public float get(final long index) {
+    public float value(final long index) {
         TensorMemoryUtils.checkIndex(index, elementCount);
         return Float.float16ToFloat(data.getAtIndex(TensorMemoryUtils.LITTLE_ENDIAN_SHORT, index));
     }

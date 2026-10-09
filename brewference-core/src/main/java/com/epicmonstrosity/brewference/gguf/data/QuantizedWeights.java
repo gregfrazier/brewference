@@ -1,6 +1,5 @@
 package com.epicmonstrosity.brewference.gguf.data;
 
-import com.epicmonstrosity.brewference.tensor.FloatTensor;
 import com.epicmonstrosity.brewference.tensor.QuantizedTensor;
 import com.epicmonstrosity.brewference.tensor.Tensor;
 import com.epicmonstrosity.brewference.transformer.rope.LongRopeScaling;
@@ -16,29 +15,55 @@ public class QuantizedWeights {
     public QuantizedTensor w1, w2, w3;
     public QuantizedTensor classifier;
 
-    // Bias is float
-    public FloatTensor qBias;
-    public FloatTensor kBias;
-    public FloatTensor vBias;
+    // Bias slots accept any GGML type; quantized payloads dequantize lazily on read.
+    public Tensor qBias;
+    public Tensor kBias;
+    public Tensor vBias;
 
-    // Norms are always float
-    public FloatTensor rmsAttWeight;
-    public FloatTensor rmsFfnWeight;
-    public FloatTensor rmsFinalWeight;
+    // Norm slots accept any GGML type; quantized payloads dequantize lazily on read.
+    public Tensor rmsAttWeight;
+    public Tensor rmsFfnWeight;
+    public Tensor rmsFinalWeight;
 
-    public FloatTensor postAttWeight;
-    public FloatTensor postFfnWeight;
+    public Tensor postAttWeight;
+    public Tensor postFfnWeight;
 
-    public FloatTensor rmsKWeight;
-    public FloatTensor rmsQWeight;
+    public Tensor rmsKWeight;
+    public Tensor rmsQWeight;
 
-    // RoPE is float
+    // RoPE factor slots accept any GGML type; quantized payloads dequantize lazily on read.
     public float[] freqCisReal;
     public float[] freqCisImag;
 
     public LongRopeScaling ropeScaling;
-    public FloatTensor ropeFactorsLong;
-    public FloatTensor ropeFactorsShort;
+    public Tensor ropeFactorsLong;
+    public Tensor ropeFactorsShort;
+
+    /**
+     * Per-layer views of the same weights carried by the flat composites above.
+     * <p>
+     * For architectures whose layers are not shape-uniform — for example hybrid SSM / full-attention
+     * models where {@code attn_q} is gated on some layers and {@code attn_qkv} is a fused linear-attention
+     * projection on others — a flat composite cannot be addressed with {@code layer * dim * width} because
+     * the width differs per layer. Those architectures must read the {@code *Layer} arrays instead.
+     * <p>
+     * Every array is nullable: it is null when the GGUF does not carry the corresponding tensor, and the
+     * flat composites are unchanged so uniform architectures keep using them.
+     */
+    public QuantizedTensor[] wqLayer, wkLayer, wvLayer, woLayer, w1Layer, w2Layer, w3Layer;
+    public Tensor[] qBiasLayer, kBiasLayer, vBiasLayer;
+    public Tensor[] rmsAttLayer, rmsFfnLayer, postAttLayer, postFfnLayer, rmsQLayer, rmsKLayer;
+
+    // Gated Delta Net (Qwen3.5 linear-attention blocks)
+    public QuantizedTensor[] attnQkvLayer;
+    public QuantizedTensor[] attnGateLayer;
+    public QuantizedTensor[] ssmAlphaLayer;
+    public QuantizedTensor[] ssmBetaLayer;
+    public QuantizedTensor[] ssmOutLayer;
+    public Tensor[] ssmALayer;
+    public Tensor[] ssmConv1dLayer;
+    public Tensor[] ssmDtBiasLayer;
+    public Tensor[] ssmNormLayer;
 
     private final Map<String, Tensor> tensors = new LinkedHashMap<>();
 
@@ -55,18 +80,16 @@ public class QuantizedWeights {
     }
 
     /**
-     * Dequantizes a row of quantized data from a QuantizedTensor and writes the resulting floating-point
-     * values into an output array.
-     * <p>
-     * Unlike other transfomers (llama.cpp), this dequant then GEMM approach is simpler but bloats the memory footprint.
+     * Reads a row of a tensor into a float array, dequantizing lazily when the tensor carries a
+     * quantized payload.
      *
-     * @param q The QuantizedTensor containing the quantized data and the corresponding scale factors.
-     * @param rowOffset The starting offset within the QuantizedTensor's data array, indicating the first
-     *                  element of the row to dequantize.
-     * @param n The total number of elements to dequantize.
-     * @param out The output array where the dequantized floating-point values are written.
+     * @param q The Tensor holding the row data (quantized payloads are dequantized element by element).
+     * @param rowOffset The starting offset within the tensor, indicating the first
+     *                  element of the row to read.
+     * @param n The total number of elements to read.
+     * @param out The output array where the floating-point values are written.
      */
-    public void dequantizeRow(final QuantizedTensor q, final int rowOffset, final int n, final float[] out) {
+    public void dequantizeRow(final Tensor q, final int rowOffset, final int n, final float[] out) {
         if (q == null || out == null || rowOffset < 0 || n < 0 ||
                 (long) rowOffset + n > q.elementCount() || out.length < n) {
             throw new IllegalArgumentException("Invalid quantized row range");

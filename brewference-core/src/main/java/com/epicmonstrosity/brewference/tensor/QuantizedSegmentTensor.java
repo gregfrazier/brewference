@@ -271,6 +271,13 @@ public final class QuantizedSegmentTensor implements QuantizedTensor {
                 final int sc = (int) segment.get(ValueLayout.JAVA_BYTE, scOff + half * 8 + sub32 * 2 + l / 16);
                 yield d * sc * q6;
             }
+            // Unquantized payloads: the segment already holds the values, so a scalar read is a
+            // plain load. Reached by the per-element matmul fallback and by composite views that
+            // mix a float tensor with block-quantized parts.
+            case F32 -> segment.get(TensorMemoryUtils.LITTLE_ENDIAN_FLOAT, index * (long) Float.BYTES);
+            case F16 -> Float.float16ToFloat(segment.get(TensorMemoryUtils.LITTLE_ENDIAN_SHORT, index * (long) Short.BYTES));
+            case BF16 -> Float.intBitsToFloat(Short.toUnsignedInt(
+                    segment.get(TensorMemoryUtils.LITTLE_ENDIAN_SHORT, index * (long) Short.BYTES)) << 16);
             default -> throw new UnsupportedOperationException("Scalar value dequantization not implemented for: " + type);
         };
     }

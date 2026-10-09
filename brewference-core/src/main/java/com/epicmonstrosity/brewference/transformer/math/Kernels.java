@@ -1,6 +1,6 @@
 package com.epicmonstrosity.brewference.transformer.math;
 
-import com.epicmonstrosity.brewference.tensor.FloatTensor;
+import com.epicmonstrosity.brewference.tensor.Tensor;
 import com.epicmonstrosity.brewference.tensor.FloatArrayTensor;
 import com.epicmonstrosity.brewference.tensor.MappedF32Tensor;
 
@@ -30,7 +30,7 @@ public final class Kernels {
      * @param headSize the size of each head in the output array
      * @param epsilon a small positive constant added to the denominator during RMS normalization to prevent division by zero
      */
-    public static void headWiseRmsNorm(final float[] output, final FloatTensor weight, final int layer, final int size,
+    public static void headWiseRmsNorm(final float[] output, final Tensor weight, final int layer, final int size,
                                        final int headSize, final float epsilon) {
         final int weightOffset = layer * headSize;
 
@@ -56,7 +56,7 @@ public final class Kernels {
      * @param epsilon a small positive constant added to the denominator to prevent division by zero
      */
     public static void rmsNorm(final float[] output, final int outputOffset, final float[] input, final int inputOffset,
-                               final FloatTensor weight, final int weightOffset, final int size, final float epsilon) {
+                               final Tensor weight, final int weightOffset, final int size, final float epsilon) {
         final float scale = inverseRootMeanSquare(input, inputOffset, size, epsilon);
         int i = 0;
 
@@ -77,8 +77,10 @@ public final class Kernels {
             }
         }
 
+        // Non-float operands (quantized or F16 payloads) dequantize per element here: one scale
+        // lookup per element. Known perf cliff for large element-wise tensors — no fast path yet.
         for (; i < size; i++) {
-            output[outputOffset + i] = input[inputOffset + i] * scale * weight.get(weightOffset + i);
+            output[outputOffset + i] = input[inputOffset + i] * scale * weight.value(weightOffset + i);
         }
     }
 
@@ -94,7 +96,7 @@ public final class Kernels {
      * @param size the number of elements in the input and weight tensor to process
      * @param epsilon a small positive constant added to prevent division by zero during normalization
      */
-    public static void rmsNorm(final float[] output, final float[] input, final FloatTensor weight,
+    public static void rmsNorm(final float[] output, final float[] input, final Tensor weight,
                                final int weightOffset, final int size, final float epsilon) {
         rmsNorm(output, 0, input, 0, weight, weightOffset, size, epsilon);
     }
@@ -238,7 +240,7 @@ public final class Kernels {
      * @param offset starting offset in {@code bias}
      * @param size number of elements to add
      */
-    public static void addBias(final float[] values, final FloatTensor bias, final int offset, final int size) {
+    public static void addBias(final float[] values, final Tensor bias, final int offset, final int size) {
         int i = 0;
         if (bias instanceof FloatArrayTensor arrayBias) {
             final float[] biasValues = arrayBias.toArray();
@@ -255,8 +257,10 @@ public final class Kernels {
                 FloatVector.fromArray(FLOAT_SPECIES, values, i).add(biasValues).intoArray(values, i);
             }
         }
+        // Non-float operands (quantized or F16 payloads) dequantize per element here. Known perf
+        // cliff for large element-wise tensors — no fast path yet.
         for (; i < size; i++) {
-            values[i] += bias.get(offset + i);
+            values[i] += bias.value(offset + i);
         }
     }
 

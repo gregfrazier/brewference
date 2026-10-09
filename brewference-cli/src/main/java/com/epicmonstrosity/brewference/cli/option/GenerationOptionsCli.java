@@ -10,11 +10,11 @@ public class GenerationOptionsCli {
 
     @Option(names = {"-n", "--max-new-tokens"},
             description = "Maximum number of tokens to generate (default: ${DEFAULT-VALUE})")
-    private int maxNewTokens = 4096;
+    private int maxNewTokens = 8196;
 
     @Option(names = {"-c", "--context-length"},
             description = "Context window size (default: ${DEFAULT-VALUE})")
-    private int contextLength = 4096;
+    private int contextLength = 8196;
 
     @Option(names = {"-t", "--temperature"},
             description = "Sampling temperature (default: ${DEFAULT-VALUE})")

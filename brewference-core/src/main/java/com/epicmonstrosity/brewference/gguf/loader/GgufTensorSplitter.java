@@ -1,10 +1,10 @@
 package com.epicmonstrosity.brewference.gguf.loader;
 
 import com.epicmonstrosity.brewference.tensor.FloatArrayTensor;
-import com.epicmonstrosity.brewference.tensor.FloatTensor;
 import com.epicmonstrosity.brewference.tensor.MappedF16Tensor;
 import com.epicmonstrosity.brewference.tensor.MappedF32Tensor;
 import com.epicmonstrosity.brewference.tensor.QuantizedTensor;
+import com.epicmonstrosity.brewference.tensor.Tensor;
 
 /**
  * Utilities for splitting fused GGUF tensors into their logical parts.
@@ -63,15 +63,15 @@ public final class GgufTensorSplitter {
     /**
      * Splits a fused QKV bias (or any other unquantized fused QKV tensor) into its three parts.
      *
-     * @param fused      the fused float tensor
+     * @param fused      the fused tensor (float or quantized payload)
      * @param qElements  number of elements belonging to Q ({@code queryAttentionWidth})
      * @param kElements  number of elements belonging to K ({@code keyValueDim})
      * @param vElements  number of elements belonging to V ({@code keyValueDim})
      * @param tensorName tensor name, used for diagnostics only
      * @return the three separated bias vectors
      */
-    public static Qkv<FloatTensor> splitFusedQkv(
-            final FloatTensor fused,
+    public static Qkv<Tensor> splitFusedQkv(
+            final Tensor fused,
             final int qElements,
             final int kElements,
             final int vElements,
@@ -82,9 +82,9 @@ public final class GgufTensorSplitter {
         }
         validateSizes(fused.elementCount(), qElements, kElements, vElements, tensorName);
         return new Qkv<>(
-                sliceFloatTensor(fused, 0, qElements),
-                sliceFloatTensor(fused, qElements, kElements),
-                sliceFloatTensor(fused, qElements + kElements, vElements));
+                sliceTensor(fused, 0, qElements),
+                sliceTensor(fused, qElements, kElements),
+                sliceTensor(fused, qElements + kElements, vElements));
     }
 
     private static QuantizedTensor sliceQuantized(final QuantizedTensor src,
@@ -97,9 +97,9 @@ public final class GgufTensorSplitter {
                 .formatted(tensorName));
     }
 
-    private static FloatTensor sliceFloatTensor(final FloatTensor src,
-                                                final int elementOffset,
-                                                final int elementCount) {
+    private static Tensor sliceTensor(final Tensor src,
+                                      final int elementOffset,
+                                      final int elementCount) {
         if (src instanceof final MappedF32Tensor mapped) {
             return new MappedF32Tensor(
                     mapped.data().asSlice(Math.multiplyExact((long) elementOffset, Float.BYTES),
@@ -112,7 +112,7 @@ public final class GgufTensorSplitter {
         }
         final float[] out = new float[elementCount];
         for (int i = 0; i < elementCount; i++) {
-            out[i] = src.get(elementOffset + i);
+            out[i] = src.value(elementOffset + i);
         }
         return new FloatArrayTensor(out);
     }

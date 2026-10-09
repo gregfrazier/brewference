@@ -1,7 +1,7 @@
 package com.epicmonstrosity.brewference.transformer.rope;
 
 import com.epicmonstrosity.brewference.tensor.FloatArrayTensor;
-import com.epicmonstrosity.brewference.tensor.FloatTensor;
+import com.epicmonstrosity.brewference.tensor.Tensor;
 
 /**
  * LongRoPE scaling (needed for Phi-3-mini-128k)
@@ -36,8 +36,8 @@ public final class LongRopeScaling {
                 headDim, ropeTheta, originalMaxPositionEmbeddings, attentionFactor);
     }
 
-    public LongRopeScaling(final FloatTensor shortFactors,
-                           final FloatTensor longFactors,
+    public LongRopeScaling(final Tensor shortFactors,
+                           final Tensor longFactors,
                            final int headDim,
                            final float ropeTheta,
                            final int originalMaxPositionEmbeddings,
@@ -55,11 +55,11 @@ public final class LongRopeScaling {
         this.longInvFreqs = precomputeInvFreqs(longFactors, halfDim, headDim, ropeTheta);
     }
 
-    private static double[] precomputeInvFreqs(final FloatTensor factors, final int halfDim,
+    private static double[] precomputeInvFreqs(final Tensor factors, final int halfDim,
                                                final int headDim, final float ropeTheta) {
         final double[] invFreqs = new double[halfDim];
         for (int i = 0; i < halfDim; i++) {
-            invFreqs[i] = 1.0 / (factors.get(i) * Math.pow(ropeTheta, (2.0 * i) / headDim));
+            invFreqs[i] = 1.0 / (factors.value(i) * Math.pow(ropeTheta, (2.0 * i) / headDim));
         }
         return invFreqs;
     }

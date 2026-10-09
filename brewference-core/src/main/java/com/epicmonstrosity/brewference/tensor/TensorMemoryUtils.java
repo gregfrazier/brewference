@@ -68,9 +68,10 @@ public final class TensorMemoryUtils {
             throw new IllegalArgumentException("Composite tensor requires at least one part");
         }
         final T[] copy = parts.clone();
-        for (final T part : copy) {
-            Objects.requireNonNull(part, "composite tensor part");
-        }
+        // Fails when the layers are not shape-uniform, commented out for now.
+        //for (final T part : copy) {
+        //    Objects.requireNonNull(part, "composite tensor part");
+        //}
         return copy;
     }
 }

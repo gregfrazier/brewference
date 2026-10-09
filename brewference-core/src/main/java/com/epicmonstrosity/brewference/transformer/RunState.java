@@ -15,8 +15,11 @@ import com.epicmonstrosity.brewference.transformer.cache.KvCache;
  * NOTICE: Activation buffers (x, xb, hb, q, k, v, att, logits) are FP32 and memory expensive.
  *         The KV cache can be FP16 or capacity-limited via KvCache/AttentionPattern, but legacy
  *         allocator paths (Llama2, Qwen2, SmolLM3, Gemma2) still use full-size FP32 key/value caches.
+ * <p>
+ * Subclasses may add architecture-specific buffers (e.g. recurrent SSM state) and must be produced by
+ * the matching {@code ModelRunner#allocateRunState} so the transformer always receives the right type.
  */
-public final class RunState {
+public class RunState {
     public float[] x;      // activation at the current time stamp
     public float[] xb;     // residual branch activation
     public float[] xb2;    // convenience buffer

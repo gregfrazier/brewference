@@ -160,52 +160,58 @@ public abstract class ModelRunner implements AutoCloseable {
         @Override
         public GenerationResult generate(final String prompt,
                                          final GenerationOptions options) {
-            ensureOpen();
-            stopRequested = false;
-            final List<Integer> promptTokens = tokenizePrompt(prompt);
+            try {
+                ensureOpen();
+                stopRequested = false;
+                final List<Integer> promptTokens = tokenizePrompt(prompt);
 
-            debugConsumer.onDebug("Starting prompt prefill processing...");
-            prefill(promptTokens);
+                debugConsumer.onDebug("Starting prompt prefill processing...");
+                prefill(promptTokens);
 
-            int generatedTokenCount = 0;
-            boolean eosEncountered = false;
-            final int remainingContext = config.getMaxSequenceLength() - position;
-            final int generationLimit = options.getMaxNewTokens() <= 0
-                    ? remainingContext
-                    : Math.min(options.getMaxNewTokens(), remainingContext);
+                int generatedTokenCount = 0;
+                boolean eosEncountered = false;
+                final int remainingContext = config.getMaxSequenceLength() - position;
+                final int generationLimit = options.getMaxNewTokens() <= 0
+                        ? remainingContext
+                        : Math.min(options.getMaxNewTokens(), remainingContext);
 
-            debugConsumer.onDebug("Generating...");
-            final StreamingUnicodeDecoder streamingDecoder = new StreamingUnicodeDecoder(debugConsumer);
+                debugConsumer.onDebug("Generating...");
+                final StreamingUnicodeDecoder streamingDecoder = new StreamingUnicodeDecoder(debugConsumer);
 
-            final long startTime = System.nanoTime();
-            while (!eosEncountered && !stopRequested && generatedTokenCount < generationLimit) {
-                final int generatedToken = sampleNextToken(pendingToken, position, options);
-                pendingToken = generatedToken;
-                position++;
-                generatedTokenCount++;
+                final long startTime = System.nanoTime();
+                while (!eosEncountered && !stopRequested && generatedTokenCount < generationLimit) {
+                    final int generatedToken = sampleNextToken(pendingToken, position, options);
+                    pendingToken = generatedToken;
+                    position++;
+                    generatedTokenCount++;
 
-                streamingDecoder.append(position - 1, generatedToken, tokenToBytes(generatedToken));
+                    streamingDecoder.append(position - 1, generatedToken, tokenToBytes(generatedToken));
 
-                if (generatedToken == config.getEosToken()) {
-                    eosEncountered = true;
+                    if (generatedToken == config.getEosToken()) {
+                        eosEncountered = true;
+                    }
                 }
+
+                streamingDecoder.flush(position - 1, pendingToken);
+
+                final long endTime = System.nanoTime();
+                final double elapsedTime = endTime - startTime;
+
+                final GenerationResult generationResult = new GenerationResult(
+                        promptTokens.size(),
+                        generatedTokenCount,
+                        eosEncountered,
+                        false,
+                        stopRequested,
+                        elapsedTime
+                );
+                debugConsumer.onComplete(generationResult);
+                return generationResult;
+            } catch (final Exception e) {
+                debugConsumer.onDebug("Error occurred during generation: " + e.getMessage());
+                //debugConsumer.onError(e);
+                throw e;
             }
-
-            streamingDecoder.flush(position - 1, pendingToken);
-
-            final long endTime = System.nanoTime();
-            final double elapsedTime = endTime - startTime;
-
-            final GenerationResult generationResult = new GenerationResult(
-                    promptTokens.size(),
-                    generatedTokenCount,
-                    eosEncountered,
-                    false,
-                    stopRequested,
-                    elapsedTime
-            );
-            debugConsumer.onComplete(generationResult);
-            return generationResult;
         }
 
         @Override

@@ -17,7 +17,7 @@ public final class MappedF32Tensor implements FloatTensor {
     }
 
     @Override
-    public float get(final long index) {
+    public float value(final long index) {
         TensorMemoryUtils.checkIndex(index, elementCount);
         return data.getAtIndex(TensorMemoryUtils.LITTLE_ENDIAN_FLOAT, index);
     }

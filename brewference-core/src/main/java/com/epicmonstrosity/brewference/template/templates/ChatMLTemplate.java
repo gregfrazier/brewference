@@ -42,7 +42,7 @@ public class ChatMLTemplate implements PromptTemplate {
 
     @Override
     public String renderForCompletion(final List<ChatMessage> messages) {
-        return render(messages) + "<|im_start|>assistant\n";
+        return render(messages) + "<|im_start|>assistant\n<think>\n";
     }
 
     private String toTemplateRole(final ChatRole role) {

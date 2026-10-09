@@ -17,6 +17,15 @@ The project is primarily intended as a learning resource and proof of concept fo
 - Text generation
 - No native dependencies
 
+## Recent Changes
+- Gated Delta Net support.
+  - It's partially AI-coded (pi + Qwen3.8-Flash-Next), so I'm not thrilled with it. But I wanted to see it working.
+- New models supported:
+  - Qwen 3.5 4B
+  - FrogNano 4B 2609 (broken inference)
+  - Bonsai 27B Q1_0
+- Last update for some time. I have lost interest in this project.
+
 ## About
 
 Brewference was built to explore how modern LLM inference works from the ground up. Rather than wrapping existing native libraries, the entire transformer forward pass is implemented in Java.
@@ -66,6 +75,7 @@ Prompt used: `Hello! What was the last thing you remember before waking up?`
 | Model                         | Tokens Per Second                     | Template | Arch    |
 |-------------------------------|---------------------------------------|----------|---------|
 | Bonsai 1.7B, 8B - Q1_0        | 8B - 6t/s; 1.7B - 25t/s.              | jinja    | qwen3   |
+| Bonsai 27B - Q1_0             | 27B - 2t/s                            | qwen2    | qwen35  |
 | Gemma 3 270M                  |                                       | gemma    | gemma3  |
 | Gemma 3 1B                    | 19 t/s                                | jinja    | gemma3  |
 | Gemma 2 2B                    |                                       | gemma    | gemma2  |
@@ -73,7 +83,8 @@ Prompt used: `Hello! What was the last thing you remember before waking up?`
 | SmolLM2 1.7B                  |                                       | jinja    | llama   |
 | SmolLM2 135M                  | 53 t/s                                | jinja    | llama   |
 | SmolLM3 3B                    | 6 t/s                                 | jinja    | smollm3 |
-| Qwen 3 (0.6B, 1.7B, 4B)       | 0.6B - 30t/s; 1.7B - 11t/s; 4B - 5t/s | jinja    | qwen3   |
+| Qwen 3 (0.6B, 1.7B, 4B)       | 0.6B - 30t/s; 1.7B - 11t/s; 4B - 5t/s | qwen2    | qwen3   |
+| Qwen 3.5 (dense)              | 0.8B, 2B, 4B - 5t/s                   | qwen2    | qwen35  |
 | Qwen 2.x 3B                   |                                       | jinja    | qwen2   |
 | Qwen 2.x Coder                | 3B - 6t/s                             | jinja    | qwen2   |
 | CodeQwen 1.5 (7b)             | 3 t/s                                 | jinja    | qwen2   |
@@ -81,12 +92,14 @@ Prompt used: `Hello! What was the last thing you remember before waking up?`
 | Llama 2 7B                    | 2 t/s                                 | llama2   | llama   |
 | Phi-3 Mini 4K Instruct        |                                       | llama2   | llama   |
 | Phi-3 Mini 128K Instruct (4B) | 5 t/s                                 | jinja    | phi3    |
+| FrogNano 4B 2609              | 5 t/s - Extremely Broken              | qwen2    | qwen35  |
 
 ### Planned Additions
 - Ministral 3 3B
 - Mistral 7B
-- Qwen 3.5 1.7B or smaller
 - LFM 2.5 1.2B
+- Gemma 4 MoE
+- Spark X2.5 1.7B, 4B
 
 **Notes**
 
@@ -94,6 +107,8 @@ Prompt used: `Hello! What was the last thing you remember before waking up?`
 - Quantized models are slower than their Q8_0 counterparts. Q1_0 for Bonsai is decent but still lacking.
 - The Gemma models implementation is flawed. The models will forget your current inquiry and talk about random topics.
 - The token decoders for a lot of these models are simplistic and will leave system tokens in the output.
+- FrogNano 4B works, but it's busted. It gives good information then starts to produce repetitive numbers. I'm not going to intentionally fix it.
+- Jinja support is pretty bad. Only older models with less complex scripts work.
 
 ## Example Usage
 Launch brewference-cli JAR and use the TUI to load models and modify configuration, command line switches are also supported:
@@ -101,7 +116,7 @@ Launch brewference-cli JAR and use the TUI to load models and modify configurati
 $ java --add-modules jdk.incubator.vector -jar brewference-core-1.0-SNAPSHOT.jar
 ```
 If Jinja fails, try using the built-in templates:
-- qwen2
+- qwen2 (ChatML)
 - smollm
 - phi3
 - gemma

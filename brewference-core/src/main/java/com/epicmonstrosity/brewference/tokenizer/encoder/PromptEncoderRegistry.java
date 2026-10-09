@@ -55,6 +55,13 @@ public final class PromptEncoderRegistry {
                         VocabLoader::loadVocabWithMerges
                 )
         );
+        register("qwen35-gpt2",
+                new TokenCodec(
+                        new Qwen2PromptEncoder(),
+                        new ByteLevelTokenDecoder(new Qwen2PromptEncoder().buildByteToUnicode()),
+                        VocabLoader::loadVocabWithMerges
+                )
+        );
     }
 
     public void register(final String id, final TokenCodec encoder) {

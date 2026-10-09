@@ -15,7 +15,7 @@ public final class FloatArrayTensor implements FloatTensor {
     }
 
     @Override
-    public float get(final long index) {
+    public float value(final long index) {
         TensorMemoryUtils.checkIndex(index, values.length);
         return values[(int) index];
     }

@@ -16,6 +16,8 @@ import com.epicmonstrosity.brewference.model.qwen2.Qwen2CheckpointLoader;
 import com.epicmonstrosity.brewference.model.qwen2.Qwen2ModelRunner;
 import com.epicmonstrosity.brewference.model.qwen3.Qwen3CheckpointLoader;
 import com.epicmonstrosity.brewference.model.qwen3.Qwen3ModelRunner;
+import com.epicmonstrosity.brewference.model.qwen35.Qwen35CheckpointLoader;
+import com.epicmonstrosity.brewference.model.qwen35.Qwen35ModelRunner;
 import com.epicmonstrosity.brewference.model.smollm3.SmolLM3ModelRunner;
 import com.epicmonstrosity.brewference.runtime.ModelRunner;
 import com.epicmonstrosity.brewference.tokenizer.encoder.PromptEncoderRegistry;
@@ -39,6 +41,8 @@ public class ModelRunnerFactory {
             case "phi3" -> new Phi3ModelRunner(new Phi3CheckpointLoader(filename, options), tokenCodec, debugConsumer);
             case "qwen2" -> new Qwen2ModelRunner(new Qwen2CheckpointLoader(filename, options), tokenCodec, debugConsumer);
             case "qwen3" -> new Qwen3ModelRunner(new Qwen3CheckpointLoader(filename, options), tokenCodec, debugConsumer);
+            case "qwen35" -> new Qwen35ModelRunner(new Qwen35CheckpointLoader(filename, options), tokenCodec, debugConsumer);
+            case "qwen35moe" -> throw new IllegalArgumentException("Architecture 'qwen35moe' is not supported yet: MoE routing (ffn_gate_inp / expert tensors) is not implemented.");
             case "smollm3" -> new SmolLM3ModelRunner(new Llama2CheckpointLoader(filename, options), tokenCodec, debugConsumer);
 
             // TODO: allow unsupported architectures to be interrogated by the configuration viewer

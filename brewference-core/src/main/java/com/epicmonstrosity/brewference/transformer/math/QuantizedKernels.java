@@ -107,12 +107,25 @@ public final class QuantizedKernels {
 
     public static void matmul(final float[] output, final float[] input, final QuantizedSegmentTensor weights,
                               final int weightsOffset, final int inputSize, final int outputSize) {
+        matmul(output, 0, input, weights, weightsOffset, inputSize, outputSize);
+    }
+
+    /**
+     * Same as {@link #matmul(float[], float[], QuantizedSegmentTensor, int, int, int)} but writes the
+     * row results into {@code output[outputOffset, outputOffset + outputSize)}.
+     * <p>
+     * Used when one logical weight is stitched from several quantized parts: each part-aligned run of
+     * rows is served by that part's own segment, and the runs share one output array.
+     */
+    public static void matmul(final float[] output, final int outputOffset, final float[] input,
+                              final QuantizedSegmentTensor weights,
+                              final int weightsOffset, final int inputSize, final int outputSize) {
         final QuantizedDotKernel kernel = getKernel(weights.ggmlType());
         final MemorySegment segment = weights.segment();
 
         if (outputSize < PARALLEL_THRESHOLD) {
             for (int row = 0; row < outputSize; row++) {
-                output[row] = kernel.dot(segment, (long) weightsOffset + (long) row * inputSize, input, 0, inputSize);
+                output[outputOffset + row] = kernel.dot(segment, (long) weightsOffset + (long) row * inputSize, input, 0, inputSize);
             }
             return;
         }
@@ -127,7 +140,7 @@ public final class QuantizedKernels {
             MATMUL_POOL.execute(() -> {
                 try {
                     for (int row = start; row < end; row++) {
-                        output[row] = kernel.dot(segment, (long) weightsOffset + (long) row * inputSize, input, 0, inputSize);
+                        output[outputOffset + row] = kernel.dot(segment, (long) weightsOffset + (long) row * inputSize, input, 0, inputSize);
                     }
                 } finally {
                     latch.countDown();

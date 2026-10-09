@@ -1,7 +1,7 @@
 package com.epicmonstrosity.brewference.gguf;
 
 import com.epicmonstrosity.brewference.gguf.loader.GgufTensorSplitter;
-import com.epicmonstrosity.brewference.tensor.CompositeFloatTensor;
+import com.epicmonstrosity.brewference.tensor.CompositeTensor;
 import com.epicmonstrosity.brewference.tensor.CompositeQuantizedTensor;
 import com.epicmonstrosity.brewference.tensor.FloatArrayTensor;
 import com.epicmonstrosity.brewference.tensor.FloatTensor;
@@ -9,6 +9,7 @@ import com.epicmonstrosity.brewference.tensor.MappedF16Tensor;
 import com.epicmonstrosity.brewference.tensor.MappedF32Tensor;
 import com.epicmonstrosity.brewference.tensor.QuantizedSegmentTensor;
 import com.epicmonstrosity.brewference.tensor.QuantizedTensor;
+import com.epicmonstrosity.brewference.tensor.Tensor;
 import com.epicmonstrosity.brewference.transformer.math.Kernels;
 import com.epicmonstrosity.brewference.transformer.math.Linear;
 import org.junit.jupiter.api.Test;
@@ -270,11 +271,11 @@ class MappedTensorSupportTest {
         source.setAtIndex(LITTLE_ENDIAN_FLOAT, 1, 2.0f);
         source.setAtIndex(LITTLE_ENDIAN_FLOAT, 2, 3.0f);
         final FloatTensor fusedFloat = new MappedF32Tensor(source.asReadOnly(), 3);
-        final GgufTensorSplitter.Qkv<FloatTensor> floats =
+        final GgufTensorSplitter.Qkv<Tensor> floats =
                 GgufTensorSplitter.splitFusedQkv(fusedFloat, 1, 1, 1, "bias");
 
         source.setAtIndex(LITTLE_ENDIAN_FLOAT, 1, 7.0f);
-        assertEquals(7.0f, floats.k().get(0));
+        assertEquals(7.0f, floats.k().value(0));
     }
 
     @Test
@@ -310,7 +311,7 @@ class MappedTensorSupportTest {
         final CompositeQuantizedTensor q8 = new CompositeQuantizedTensor(
                 segment(firstBytes, GgmlType.Q8_0, 32),
                 segment(secondBytes, GgmlType.Q8_0, 32));
-        final CompositeFloatTensor floats = new CompositeFloatTensor(
+        final CompositeTensor floats = new CompositeTensor(
                 new FloatArrayTensor(new float[]{1.0f}),
                 new FloatArrayTensor(new float[]{2.0f, 3.0f}));
 
@@ -320,7 +321,7 @@ class MappedTensorSupportTest {
         assertEquals(13.5f, q8.value(32), 0.0001f);
         assertArrayEquals(new float[]{1.0f, 2.0f, 3.0f}, floats.toArray());
         assertThrows(IndexOutOfBoundsException.class, () -> q8.value(64));
-        assertThrows(IndexOutOfBoundsException.class, () -> floats.get(-1));
+        assertThrows(IndexOutOfBoundsException.class, () -> floats.value(-1));
     }
 
     @Test

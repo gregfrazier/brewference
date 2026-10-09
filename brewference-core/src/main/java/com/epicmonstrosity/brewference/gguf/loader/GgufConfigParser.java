@@ -54,6 +54,7 @@ public final class GgufConfigParser {
         writeConfigFloat(metadata, appendArch(config, "attention.layer_norm_rms_epsilon"), config::setLayerNormRMSEpsilon);
         writeConfigInt(metadata, appendArch(config, "attention.head_count"), config::setNumHeads);
         writeConfigInt(metadata, appendArch(config, "attention.head_count_kv"), config::setNumKVHeads);
+        writeConfigInt(metadata, appendArch(config, "attention.key_length"), config::setAttentionKeyLength);
         writeConfigInt(metadata, appendArch(config, "attention.sliding_window"), config::setSlidingWindow);
 
         // RoPE parameters
@@ -64,13 +65,23 @@ public final class GgufConfigParser {
         writeConfigFloat(metadata, appendArch(config, "rope.scaling.attn_factor"), config::setRopeScalingAttnFactor);
         writeConfigInt(metadata, appendArch(config, "rope.dimension_count"), config::setRopeDimCount);
 
+        // SSM / Gated Delta Net
+        writeConfigInt(metadata, appendArch(config, "full_attention_interval"), config::setFullAttentionInterval);
+        writeConfig(metadata, appendArch(config, "attention.recurrent_layers"), java.util.List.class,
+                values -> config.setRecurrentLayers(recurrentLayers(values, config)));
+        writeConfigInt(metadata, appendArch(config, "ssm.conv_kernel"), config::setConvKernel);
+        writeConfigInt(metadata, appendArch(config, "ssm.state_size"), config::setStateSize);
+        writeConfigInt(metadata, appendArch(config, "ssm.group_count"), config::setGroupCount);
+        writeConfigInt(metadata, appendArch(config, "ssm.time_step_rank"), config::setTimeStepRank);
+        writeConfigInt(metadata, appendArch(config, "ssm.inner_size"), config::setInnerSize);
+
+
         // MoE parameters (all integer)
         // ".expert_count"
         // ".expert_used_count"
         // ".expert_feed_forward_length"
         // ".leading_dense_block_count" // default to block_count if missing
         // ".expert_gating_func" // 1 = softmax, 2 = sigmoid
-
 
         // For reading by Per-Model config parser.
         config.setMetadata(metadata);
@@ -80,6 +91,37 @@ public final class GgufConfigParser {
 
     private static String appendArch(final Config config, final String metadataName) {
         return String.format("%s.%s", config.getArchitecture(), metadataName);
+    }
+
+    /**
+     * {@code <arch>.attention.recurrent_layers} states per layer whether it is a recurrent
+     * (Gated Delta Net) layer. That is more precise than deriving the layout from
+     * {@code full_attention_interval}, which cannot express a model whose final layer is a
+     * full-attention layer, so a stated list is validated against {@code block_count} instead of being
+     * approximated.
+     */
+    private static boolean[] recurrentLayers(final java.util.List<?> values, final Config config) {
+        final String key = appendArch(config, "attention.recurrent_layers");
+        final String blockCountKey = appendArch(config, "block_count");
+        final int blockCount = config.getNumLayers();
+        if (blockCount <= 0) {
+            throw new IllegalArgumentException("%s is present but %s is missing or zero; the layer list cannot be mapped onto layers"
+                    .formatted(key, blockCountKey));
+        }
+        if (values.size() != blockCount) {
+            throw new IllegalArgumentException("%s has %d entries but %s is %d"
+                    .formatted(key, values.size(), blockCountKey, blockCount));
+        }
+        final boolean[] layers = new boolean[blockCount];
+        for (int i = 0; i < blockCount; i++) {
+            final Object value = values.get(i);
+            if (!(value instanceof Boolean)) {
+                throw new IllegalArgumentException("%s entry %d is %s, expected a boolean"
+                        .formatted(key, i, value == null ? "null" : value.getClass().getSimpleName()));
+            }
+            layers[i] = (Boolean) value;
+        }
+        return layers;
     }
 
     private static void writeConfigFloat(final Map<String, Object> metadata,
