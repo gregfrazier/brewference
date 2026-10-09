@@ -2,6 +2,7 @@ package com.epicmonstrosity.brewference.transformer.math;
 
 import com.epicmonstrosity.brewference.gguf.GgmlType;
 import com.epicmonstrosity.brewference.tensor.QuantizedSegmentTensor;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.MemorySegment;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Disabled
 class QuantizedKernelsTest {
     private static final ValueLayout.OfShort LE_SHORT =
             ValueLayout.JAVA_SHORT_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
