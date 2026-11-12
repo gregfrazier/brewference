@@ -27,7 +27,7 @@ public class Gemma3Transformer implements TransformerGraph {
     }
 
     @Override
-    public void forward(final int token, final int pos, final RunState runState, final QuantizedWeights weights) {
+    public void forward(final int token, final int pos, final RunState runState, final QuantizedWeights weights, final boolean computeLogits) {
         final int dim = config.getTransformerDimensions();
 
         weights.dequantizeRow(weights.tokenEmbeddingTable, token * dim, dim, runState.x);
@@ -91,6 +91,7 @@ public class Gemma3Transformer implements TransformerGraph {
         Kernels.rmsNorm(runState.x, runState.x, weights.rmsFinalWeight, 0, dim, config.getLayerNormRMSEpsilon());
 
         // Classifier / Output projection to logits
-        Linear.matmul(runState.logits, runState.x, weights.classifier, 0, dim, config.getVocabSize());
+        if (computeLogits)
+            Linear.matmul(runState.logits, runState.x, weights.classifier, 0, dim, config.getVocabSize());
     }
 }

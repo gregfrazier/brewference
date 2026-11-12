@@ -101,8 +101,8 @@ public final class Kernels {
         rmsNorm(output, 0, input, 0, weight, weightOffset, size, epsilon);
     }
 
-    private static float inverseRootMeanSquare(final float[] input, final int inputOffset,
-                                               final int size, final float epsilon) {
+    public static float inverseRootMeanSquare(final float[] input, final int inputOffset,
+                                              final int size, final float epsilon) {
         float sumOfSquares = ZERO;
         int i = 0;
         FloatVector vectorSum = FloatVector.zero(FLOAT_SPECIES);

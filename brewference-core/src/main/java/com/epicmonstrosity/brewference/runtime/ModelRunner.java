@@ -18,6 +18,7 @@ import com.epicmonstrosity.brewference.transformer.TransformerGraph;
 import com.epicmonstrosity.brewference.transformer.math.Kernels;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class ModelRunner implements AutoCloseable {
@@ -128,7 +129,6 @@ public abstract class ModelRunner implements AutoCloseable {
         private final Sampler sampler = new Sampler();
         private RunState runState;
         private int position;
-        private int pendingToken;
         private volatile boolean stopRequested;
 
         private GenericModelSession() {
@@ -148,7 +148,6 @@ public abstract class ModelRunner implements AutoCloseable {
             }
             runState = allocateRunState(config);
             position = 0;
-            pendingToken = config.getBosToken();
             stopRequested = false;
         }
 
@@ -166,7 +165,7 @@ public abstract class ModelRunner implements AutoCloseable {
                 final List<Integer> promptTokens = tokenizePrompt(prompt);
 
                 debugConsumer.onDebug("Starting prompt prefill processing...");
-                prefill(promptTokens);
+                prefill(promptTokens.isEmpty() && position == 0 ? List.of(config.getBosToken()) : promptTokens);
 
                 int generatedTokenCount = 0;
                 boolean eosEncountered = false;
@@ -179,20 +178,23 @@ public abstract class ModelRunner implements AutoCloseable {
                 final StreamingUnicodeDecoder streamingDecoder = new StreamingUnicodeDecoder(debugConsumer);
 
                 final long startTime = System.nanoTime();
+                int lastToken = -1;
                 while (!eosEncountered && !stopRequested && generatedTokenCount < generationLimit) {
-                    final int generatedToken = sampleNextToken(pendingToken, position, options);
-                    pendingToken = generatedToken;
+                    final int generatedToken = sampleNextToken(options); //, position, options);
+                    lastToken = generatedToken;
                     position++;
                     generatedTokenCount++;
 
-                    streamingDecoder.append(position - 1, generatedToken, tokenToBytes(generatedToken));
+                    streamingDecoder.append(position, generatedToken, tokenToBytes(generatedToken));
 
                     if (generatedToken == config.getEosToken()) {
                         eosEncountered = true;
                     }
+                    transformer.forward(generatedToken, position, runState, weights, true);
+                    position++;
                 }
 
-                streamingDecoder.flush(position - 1, pendingToken);
+                streamingDecoder.flush(position - 1, lastToken);
 
                 final long endTime = System.nanoTime();
                 final double elapsedTime = endTime - startTime;
@@ -222,11 +224,7 @@ public abstract class ModelRunner implements AutoCloseable {
             return position;
         }
 
-        private int sampleNextToken(final int token,
-                                    final int tokenPosition,
-                                    final GenerationOptions options) {
-            transformer.forward(token, tokenPosition, runState, weights);
-
+        private int sampleNextToken(final GenerationOptions options) {
             if (options.getTemperature() <= 0.0f) {
                 return Kernels.argMax(runState.logits, config.getVocabSize());
             }
@@ -243,16 +241,16 @@ public abstract class ModelRunner implements AutoCloseable {
         private void prefill(final List<Integer> promptTokens) {
             runState.promptSize = promptTokens.size();
             debugConsumer.onPrefillTotal(promptTokens.size());
-            for (final Integer promptToken : promptTokens) {
+            final int lastIndex = promptTokens.size() - 1;
+            //for (final Integer promptToken : promptTokens) {
+            for (int i = 0; i <= lastIndex; i++) {
                 if (stopRequested) {
                     break;
                 }
+                final int promptToken = promptTokens.get(i);
                 ensureContextAvailable();
-                transformer.forward(promptToken, position, runState, weights);
-
-                debugConsumer.onPrefillToken(position, pendingToken, decodeToken(pendingToken));
-
-                pendingToken = promptToken;
+                transformer.forward(promptToken, position, runState, weights, i == lastIndex || stopRequested);
+                debugConsumer.onPrefillToken(position, promptToken, decodeToken(promptToken));
                 position++;
             }
         }

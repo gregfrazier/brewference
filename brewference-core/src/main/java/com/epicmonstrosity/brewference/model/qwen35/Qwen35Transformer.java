@@ -53,7 +53,7 @@ public class Qwen35Transformer implements TransformerGraph {
     }
 
     @Override
-    public void forward(final int token, final int pos, final RunState runState, final QuantizedWeights weights) {
+    public void forward(final int token, final int pos, final RunState runState, final QuantizedWeights weights, final boolean computeLogits) {
         if (!(runState instanceof final Qwen35RunState state)) {
             throw new IllegalStateException("qwen35 needs a Qwen35RunState (produced by Qwen35ModelRunner.allocateRunState), got %s"
                     .formatted(runState.getClass().getSimpleName()));
@@ -91,7 +91,8 @@ public class Qwen35Transformer implements TransformerGraph {
         }
 
         Kernels.rmsNorm(state.x, state.x, weights.rmsFinalWeight, 0, dim, epsilon);
-        Linear.matmul(state.logits, state.x, weights.classifier, 0, dim, config.getVocabSize());
+        if (computeLogits)
+            Linear.matmul(state.logits, state.x, weights.classifier, 0, dim, config.getVocabSize());
     }
 
     private GatedDeltaNetWeights gatedDeltaNetWeights(final QuantizedWeights weights, final int layer) {

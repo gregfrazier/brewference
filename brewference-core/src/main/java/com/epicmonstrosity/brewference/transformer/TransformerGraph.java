@@ -13,6 +13,8 @@ public interface TransformerGraph {
      *                 used throughout the forward pass. This state is updated during the computation.
      * @param weights The quantized weight parameters of the transformer model, including embeddings,
      *                attention weights, feedforward weights, and related parameters.
+     * @param computeLogits Whether to compute the logits for the next token. If false, the logits are not computed
+     *                       and the transformer graph can be used for inference without computing the full softmax.
      */
-    void forward(int token, int pos, RunState runState, QuantizedWeights weights);
+    void forward(int token, int pos, RunState runState, QuantizedWeights weights, boolean computeLogits);
 }
